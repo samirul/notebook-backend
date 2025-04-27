@@ -40,9 +40,9 @@ INSTALLED_APPS = [
 ]
 
 CREATED_APPS = [
-    'accounts',
-    'BaseID',
-    'note',
+    'accounts.apps.AccountsConfig',
+    'BaseID.apps.BaseidConfig',
+    'note.apps.NoteConfig',
 ]
 
 INSTALLED_APPS += CREATED_APPS
