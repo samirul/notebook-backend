@@ -39,6 +39,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+CREATED_APPS = [
+    'accounts',
+    'BaseID',
+    'note',
+]
+
+INSTALLED_APPS += CREATED_APPS
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
