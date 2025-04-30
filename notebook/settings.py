@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -46,7 +48,47 @@ CREATED_APPS = [
     'note.apps.NoteConfig',
 ]
 
+THIRD_PARTY_APPS = [
+    "rest_framework",
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    "rest_framework.authtoken",
+    "corsheaders",
+    # "django_admin_logs",
+
+    # Social Authentication
+
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google"
+]
+
+INSTALLED_APPS += THIRD_PARTY_APPS
+
 INSTALLED_APPS += CREATED_APPS
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        "APP": {
+            "client_id": os.getenv("GOOGLE_SOCIAL_LOGIN_CLIENT_ID"),
+            "secret": os.getenv("GOOGLE_SOCIAL_LOGIN_SECRET_KEY"),
+            "key": ""
+        },
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    }
+}
+
+AUTH_USER_MODEL = 'accounts.User'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
