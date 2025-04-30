@@ -1,9 +1,8 @@
 """
     JWT Authentication Middleware for Django Channels
-    This middleware extracts the JWT token from the query string and authenticates the user.
+    This middleware extracts the JWT token from the cookies and authenticates the user.
     It uses the JWT token to retrieve the user ID and set the user in the scope.
 """
-from urllib.parse import parse_qs
 
 from channels.auth import AuthMiddlewareStack
 from channels.db import database_sync_to_async
@@ -50,8 +49,10 @@ class JWTAuthMiddleware:
         # Close old database connections
         close_old_connections()
         try:
-            # Get the token from the query string
-            token = parse_qs(scope["query_string"].decode("utf8")).get("token", None)[0]
+            # Extract the headers from the scope
+            headers = scope.get("headers", [])
+            # Get the token from the httponly cookies
+            token = self.get_cookie_value(headers, "access_token")
             if token is not None:
                 # Decode the JWT token
                 data = jwt_decode(token, settings.SECRET_KEY, algorithms=["HS256"])
@@ -61,6 +62,25 @@ class JWTAuthMiddleware:
             # if token is not valid or expired then set the user to Anonymous .
             scope['user'] = AnonymousUser()
         return await self.inner(scope, receive, send)
+    
+
+    def get_cookie_value(self, headers, cookie_name):
+        """
+            Retrieves the value of a specific cookie from the request headers.
+
+            Args:
+                headers: A list of headers from the request.
+                cookie_name: The name of the cookie to retrieve.
+
+            Returns:
+                The value of the cookie if found, otherwise None.
+        """
+        for header in headers:
+            if header[0].lower() == b'cookie':
+                cookie_string = header[1].decode()
+                cookies = dict(pair.strip().split('=') for pair in cookie_string.split(';') if '=' in pair)
+                return cookies.get(cookie_name)
+        return None
 
     @database_sync_to_async
     def get_user(self, user_id):
