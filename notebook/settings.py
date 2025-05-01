@@ -207,7 +207,7 @@ REST_AUTH = {
     'USE_JWT': True,
     'JWT_AUTH_HTTPONLY':True,
     'JWT_AUTH_COOKIE': 'access_token',
-    'JWT_AUTH_REFRESH_COOKIE': 'refresh_token',
+    'JWT_AUTH_REFRESH_COOKIE': 'refresh',
     'JWT_AUTH_SECURE': True,
     'JWT_AUTH_SAMESITE': 'Lax',
     'LOGIN_SERIALIZER': 'dj_rest_auth.serializers.LoginSerializer',
