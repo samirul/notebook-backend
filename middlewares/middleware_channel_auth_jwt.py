@@ -96,7 +96,7 @@ class JWTAuthMiddleware:
                 The user object if found, otherwise an AnonymousUser instance.
         """
         try:
-            return User.objects.get(id=user_id)
+            return User.objects.only('email').get(id=user_id)
         except User.DoesNotExist:
             return AnonymousUser()
         

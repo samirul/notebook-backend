@@ -1,6 +1,8 @@
 import os
 import json
+from django.contrib.auth.models import AnonymousUser
 from channels.generic.websocket import AsyncWebsocketConsumer
+from .token_checker import check_token
 
 class NotificationtConsumer(AsyncWebsocketConsumer):
     def __init__(self):
@@ -21,6 +23,10 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
             await self.close()
             
     async def receive(self, text_data=None, bytes_data=None):
+        user = await check_token(self.scope["headers"])
+        if isinstance(user, AnonymousUser):
+            await self.close()
+            return
         print(text_data)
     
     async def disconnect(self, code):
