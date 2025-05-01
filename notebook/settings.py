@@ -234,6 +234,15 @@ ACCOUNT_EMAIL_VERIFICATION = 'optional' # need to change later
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 
+
+LOGIN_URL = 'http://localhost:8080/login'
+
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
