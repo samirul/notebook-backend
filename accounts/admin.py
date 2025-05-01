@@ -8,8 +8,6 @@ from django.contrib import admin
 from django.apps import apps
 from accounts.models import User
 
-# Register your models here.
-
 @admin.register(User)
 class UserModelAdmin(admin.ModelAdmin):
     """Register User model.
