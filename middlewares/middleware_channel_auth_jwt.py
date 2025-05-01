@@ -55,9 +55,9 @@ class JWTAuthMiddleware:
             token = self.get_cookie_value(headers, "access_token")
             # If the token is not found, raise an error
             if token is None:
-                raise ValueError("Token not found in cookies")
+                raise ValueError("Token is not found in cookies.")
                 # Decode the JWT token
-            data = jwt_decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+            data = jwt_decode(token, settings.SIMPLE_JWT.get('SIGNING_KEY'), algorithms=["HS256"])
                 # Check if the token is valid and extract user ID
             scope['user'] = await self.get_user(data['user_id'])
         except (TypeError, ValueError, InvalidTokenError, InvalidSignatureError, ExpiredSignatureError, DecodeError):
