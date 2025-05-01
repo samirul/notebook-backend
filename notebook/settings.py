@@ -222,7 +222,9 @@ REST_AUTH = {
     'JWT_AUTH_SAMESITE': 'Lax',
     'LOGIN_SERIALIZER': 'dj_rest_auth.serializers.LoginSerializer',
     'REGISTER_SERIALIZER': 'dj_rest_auth.registration.serializers.RegisterSerializer'
-} 
+}
+
+SOCIALACCOUNT_ADAPTER = 'accounts.adapters.SocialAccountAdapter'
 
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_LOGOUT_ON_GET = True
