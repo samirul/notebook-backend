@@ -53,12 +53,14 @@ class JWTAuthMiddleware:
             headers = scope.get("headers", [])
             # Get the token from the httponly cookies
             token = self.get_cookie_value(headers, "access_token")
-            if token is not None:
+            # If the token is not found, raise an error
+            if token is None:
+                raise ValueError("Token not found in cookies")
                 # Decode the JWT token
-                data = jwt_decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+            data = jwt_decode(token, settings.SECRET_KEY, algorithms=["HS256"])
                 # Check if the token is valid and extract user ID
-                scope['user'] = await self.get_user(data['user_id'])
-        except (TypeError, InvalidTokenError, InvalidSignatureError, ExpiredSignatureError, DecodeError):
+            scope['user'] = await self.get_user(data['user_id'])
+        except (TypeError, ValueError, InvalidTokenError, InvalidSignatureError, ExpiredSignatureError, DecodeError):
             # if token is not valid or expired then set the user to Anonymous .
             scope['user'] = AnonymousUser()
         return await self.inner(scope, receive, send)
