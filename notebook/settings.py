@@ -211,13 +211,13 @@ REST_AUTH = {
     'JWT_AUTH_SECURE': True,
     'JWT_AUTH_SAMESITE': 'Lax',
     'LOGIN_SERIALIZER': 'dj_rest_auth.serializers.LoginSerializer',
-    'REGISTER_SERIALIZER': 'dj_rest_auth.registration.serializers.RegisterSerializer'
+    'REGISTER_SERIALIZER': 'accounts.serializers.RegisterSerializer'
 }
 
 SOCIALACCOUNT_ADAPTER = 'accounts.adapters.SocialAccountAdapter'
 
 ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_LOGOUT_ON_GET = True
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_UNIQUE_EMAIL = True
