@@ -1,11 +1,12 @@
 """
    Serializer for views.py in accounts 
 """
-
+import os
 from rest_framework import serializers
 from dj_rest_auth.registration.serializers import RegisterSerializer as DefaultSerializer
 from accounts.models import User
-from .bloom_filter import bloom_filter
+from .bloom_filter import connect_redis
+# from .bloom_filter import bloom_filter
 
 
 class GetUserSerializer(serializers.ModelSerializer):
@@ -22,6 +23,9 @@ class GetUserSerializer(serializers.ModelSerializer):
 
 class RegisterSerializer(DefaultSerializer):
     def validate_username(self, username):
-        if username in bloom_filter:
+        redis_client = connect_redis()
+        key = os.environ.get('REDIS_BLOOM_KEY')
+        bloom_filter_username_check = redis_client.execute_command('BF.EXISTS', key, username)
+        if bloom_filter_username_check == 1:
             raise serializers.ValidationError("This username already taken.")
         return username

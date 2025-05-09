@@ -2,13 +2,15 @@
     Made customer user models for user.
 """
 
+import os
 import uuid
 import requests
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.dispatch import receiver
 from django.core.files.base import ContentFile
-from allauth.account.signals import user_logged_in
+from allauth.account.signals import user_logged_in, user_signed_up
+from .bloom_filter import connect_redis
 
 class UserManager(BaseUserManager):
     """UserManager helps to create users with proper validation.
@@ -172,3 +174,10 @@ def save_google_profile_image(sender, request, user, **kwargs):
                     ContentFile(response.content)
                 )
                 user.save()
+
+@receiver(user_signed_up, sender=User)
+def save_bloom_filter_username(sender, request, user, **kwargs):
+    username = user.username
+    redis_client = connect_redis()
+    key = os.environ.get('REDIS_BLOOM_KEY')
+    redis_client.execute_command('BF.ADD', key, username)

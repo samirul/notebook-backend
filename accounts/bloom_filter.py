@@ -1,9 +1,15 @@
-from pybloom_live import BloomFilter
-from django.contrib.auth import get_user_model
+import os
+import redis
 
-User = get_user_model()
-bloom_filter = BloomFilter(capacity=10000000, error_rate=0.001)
+def RedisBloomFilter(host: str, port: int, db: int, key: str, error_rate :int = 0.01, capacity: int = 1000000):
+    redis_client = redis.Redis(host=host, port=port, db=db)
+    if not redis_client.exists(key):
+        redis_client.execute_command('BF.RESERVE', key, error_rate, capacity)
+    return redis_client
 
-def add_or_check_usernames_in_bloom_filter():
-    for username in User.objects.values_list('username', flat=True):
-        bloom_filter.add(username)
+def connect_redis():
+    return redis.Redis(
+        host = os.environ.get('REDIS_HOST'),
+        port = int(os.environ.get('REDIS_PORT')),
+        db = int(os.environ.get('REDIS_DB'))
+    )
