@@ -7,10 +7,12 @@ from .token_checker import check_token
 class NotificationtConsumer(AsyncWebsocketConsumer):
     def __init__(self):
         super().__init__(self)
-        self.room_name = os.environ.get("CHANNEL_ROOM_NAME")
-        self.room_group_name = f"{os.environ.get("CHANNEL_ROOM_GROUP")}_{self.room_name}"
+        self.room_name = None
+        self.room_group_name = None
 
     async def connect(self):
+        self.room_name = self.scope['url_route']['kwargs']['id']
+        self.room_group_name = f"{os.environ.get("CHANNEL_ROOM_GROUP")}_{self.room_name}"
         await(self.channel_layer.group_add)(
             self.room_group_name, self.channel_name
         )
@@ -30,3 +32,6 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
     
     async def disconnect(self, code):
         print("disconnected")
+
+    async def send_notification(self, event):
+        
