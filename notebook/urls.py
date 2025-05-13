@@ -14,6 +14,7 @@ urlpatterns = [
     path("password-reset/confirm/<uidb64>/<token>/", TemplateView.as_view(template_name="account/email/password_reset_confirm.html"), name='password_reset_confirm'),
     path('api/registration/', include('dj_rest_auth.registration.urls')),
     path("accounts/", include('accounts.urls')),
+    path('api/notes/', include('note.urls')),
 ]
 
 if settings.DEBUG:
