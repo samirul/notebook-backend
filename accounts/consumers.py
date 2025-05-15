@@ -17,7 +17,8 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
             self.room_group_name, self.channel_name
         )
         user = self.scope["user"]
-        if user.is_authenticated:
+
+        if user.is_authenticated and self.room_name == str(user.id):
             await self.accept()
             await self.send(text_data=json.dumps({"status": "connected"}))
         else:
