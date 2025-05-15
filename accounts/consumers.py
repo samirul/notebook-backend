@@ -28,10 +28,21 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
         if isinstance(user, AnonymousUser):
             await self.close()
             return
-        print(text_data)
+        
+        await(self.channel_layer.group_send)(
+            self.room_group_name,
+            {
+                'type': 'send_notification_created_category',
+                'notification': text_data
+            }
+        )
     
     async def disconnect(self, code):
         print("disconnected")
 
-    async def send_notification(self, event):
-        
+
+    async def send_notification_created_category(self, event):
+        value = event.get('notification')
+        await self.send(text_data=json.dumps({
+            'notification': value
+        }))

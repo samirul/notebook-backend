@@ -1,5 +1,9 @@
 from rest_framework import generics, permissions
 from .serializers import NewCategorySerializer
+from .push_websocket import created_category_note_send_notification
+
+
+
 
 
 class NewCategoryView(generics.CreateAPIView):
@@ -7,4 +11,7 @@ class NewCategoryView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save()
+        instance = serializer.save(user=self.request.user)
+        created_category_note_send_notification(
+        instance=instance, user_id=self.request.user.id
+        )
