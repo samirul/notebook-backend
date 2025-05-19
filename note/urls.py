@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import NewCategoryView
+from .views import NewCategoryCreateView
 
 urlpatterns = [
-    path('new-notes/', NewCategoryView.as_view(), name='new-notes'),
+    path('new-notes/', NewCategoryCreateView.as_view(), name='new-notes'),
 ]

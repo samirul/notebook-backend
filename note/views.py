@@ -6,7 +6,7 @@ from .push_websocket import created_category_note_send_notification
 
 
 
-class NewCategoryView(generics.CreateAPIView):
+class NewCategoryCreateView(generics.CreateAPIView):
     serializer_class = NewCategorySerializer
     permission_classes = [permissions.IsAuthenticated]
 
