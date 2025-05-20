@@ -1,5 +1,5 @@
 from rest_framework import generics, permissions
-from .serializers import NewCategorySerializer, CategoryListViewsSerializer
+from .serializers import NewCategorySerializer, CategoryListViewsSerializer, NewNoteSerializer
 from .push_websocket import created_category_note_send_notification
 from .models import CategoryNotes
 
@@ -22,3 +22,10 @@ class CategoryListView(generics.ListAPIView):
     def get_queryset(self):
         query =  super().get_queryset()
         return query.filter(user=self.request.user)
+    
+class NewNoteCreateView(generics.CreateAPIView):
+    serializer_class = NewNoteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+       serializer.save(user=self.request.user)
