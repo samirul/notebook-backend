@@ -16,7 +16,7 @@ class CategoryNotesModelAdmin(admin.ModelAdmin):
         admin (class ModelAdmin): For registering in the admin panel.
     """
     list_display = [
-      'id', 'category_title'
+      'id', 'title'
     ]
 
 @admin.register(Notes)
@@ -27,7 +27,7 @@ class NotesModelAdmin(admin.ModelAdmin):
         admin (class ModelAdmin): For registering in the admin panel.
     """
     list_display = [
-      'id', 'note_title', 'note_text'
+      'id', 'title', 'note_text'
     ]
 
 
