@@ -1,12 +1,13 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, serializers
 from rest_framework.response import Response
 from .serializers import (NewCategorySerializer, CategoryListViewsSerializer, NewNoteSerializer,
                         CategorySerializerMenu)
 from .push_websocket import created_category_note_send_notification
 from .models import CategoryNotes
+from .custom_create import CustomCreateMixins
 
 
-class NewCategoryCreateView(generics.CreateAPIView):
+class NewCategoryCreateView(CustomCreateMixins, generics.CreateAPIView):
     serializer_class = NewCategorySerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -15,6 +16,7 @@ class NewCategoryCreateView(generics.CreateAPIView):
         created_category_note_send_notification(
         instance=instance, user_id=self.request.user.id
         )
+        
 
 class CategoryListView(generics.ListAPIView):
     queryset = CategoryNotes.objects.all()

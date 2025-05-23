@@ -29,14 +29,27 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
         if isinstance(user, AnonymousUser):
             await self.close()
             return
-        
-        await(self.channel_layer.group_send)(
-            self.room_group_name,
-            {
-                'type': 'send_notification_created_category',
-                'notification': text_data
-            }
-        )
+        data = json.loads(text_data)
+        print(data)
+        event_type = data.get('type')
+        text = data.get('notification')
+        if event_type == 'notification_created_category':
+            await(self.channel_layer.group_send)(
+                    self.room_group_name,
+                    {
+                        'type': 'send_notification_created_category',
+                        'notification': text
+                    }   
+
+            )
+        if event_type == 'created_category_error':
+            await(self.channel_layer.group_send)(
+                    self.room_group_name,
+                {
+                    'type': 'send_notification_created_category_error',
+                    'notification': text
+                }
+            )
     
     async def disconnect(self, code):
         print("disconnected")
@@ -45,5 +58,13 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
     async def send_notification_created_category(self, event):
         value = event.get('notification')
         await self.send(text_data=json.dumps({
+            'type': 'notification_created_category',
+            'notification': value
+        }))
+
+    async def send_notification_created_category_error(self, event):
+        value = event.get('notification')
+        await self.send(text_data=json.dumps({
+            'type': 'created_category_error',
             'notification': value
         }))
