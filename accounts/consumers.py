@@ -42,11 +42,28 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
                     }   
 
             )
-        if event_type == 'created_category_error':
+        elif event_type == 'created_category_error':
             await(self.channel_layer.group_send)(
                     self.room_group_name,
                 {
                     'type': 'send_notification_created_category_error',
+                    'notification': text
+                }
+            )
+        elif event_type == 'notification_created_note':
+            await(self.channel_layer.group_send)(
+                    self.room_group_name,
+                    {
+                        'type': 'send_notification_created_note',
+                        'notification': text
+                    }   
+
+            )
+        elif event_type == 'created_note_error':
+            await(self.channel_layer.group_send)(
+                    self.room_group_name,
+                {
+                    'type': 'send_notification_created_note_error',
                     'notification': text
                 }
             )
@@ -66,5 +83,20 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
         value = event.get('notification')
         await self.send(text_data=json.dumps({
             'type': 'created_category_error',
+            'notification': value
+        }))
+
+    
+    async def send_notification_created_note(self, event):
+        value = event.get('notification')
+        await self.send(text_data=json.dumps({
+            'type': 'notification_created_note',
+            'notification': value
+        }))
+
+    async def send_notification_created_note_error(self, event):
+        value = event.get('notification')
+        await self.send(text_data=json.dumps({
+            'type': 'created_note_error',
             'notification': value
         }))

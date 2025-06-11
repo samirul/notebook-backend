@@ -2,12 +2,12 @@ from rest_framework import generics, permissions, serializers
 from rest_framework.response import Response
 from .serializers import (NewCategorySerializer, CategoryListViewsSerializer, NewNoteSerializer,
                         CategorySerializerMenu)
-from .push_websocket import created_category_note_send_notification
+from .push_websocket import created_category_note_send_notification, created_note_send_notification
 from .models import CategoryNotes
-from .custom_create import CustomCreateMixins
+from .custom_create import CustomCategoryCreateMixins, CustomNoteCreateMixins
 
 
-class NewCategoryCreateView(CustomCreateMixins, generics.CreateAPIView):
+class NewCategoryCreateView(CustomCategoryCreateMixins, generics.CreateAPIView):
     serializer_class = NewCategorySerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -27,12 +27,15 @@ class CategoryListView(generics.ListAPIView):
         query =  super().get_queryset()
         return query.filter(user=self.request.user)
     
-class NewNoteCreateView(generics.CreateAPIView):
+class NewNoteCreateView(CustomNoteCreateMixins, generics.CreateAPIView):
     serializer_class = NewNoteSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-       serializer.save(user=self.request.user)
+       instance = serializer.save(user=self.request.user)
+       created_note_send_notification(
+       instance=instance, user_id=self.request.user.id
+       )
 
 class NotesListView(generics.ListAPIView):
     queryset = CategoryNotes.objects.prefetch_related('notes_category')
