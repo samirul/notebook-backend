@@ -3,7 +3,7 @@ from BaseID.models import BaseIdModel
 from accounts.models import User
 
 class CategoryNotes(BaseIdModel):
-    title = models.CharField(max_length=150, unique=True)
+    title = models.CharField(max_length=15, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_category')
     objects = models.Manager()
 

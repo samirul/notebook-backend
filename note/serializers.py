@@ -38,3 +38,7 @@ class CategorySerializerMenu(serializers.ModelSerializer):
     def get_subcategories(self, obj):
         notes = obj.notes_category.only('id', 'title')
         return NoteSerializerMenu(notes, many=True).data
+    
+class CategorySearchViewSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    title = serializers.CharField()

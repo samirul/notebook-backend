@@ -44,6 +44,8 @@ THIRD_PARTY_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     "rest_framework.authtoken",
     "corsheaders",
+    'django_elasticsearch_dsl',
+    'django_elasticsearch_dsl_drf',
     # "django_admin_logs",
 
     # Social Authentication
@@ -277,3 +279,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Django sessions are stored in Redis
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
+
+
+# Elastic search
+
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': os.environ.get('ELASTIC_SEARCH_URL'),
+        'http_auth': (os.environ.get('ELASTIC_SEARCH_USER_NAME'), os.environ.get('ELASTIC_SEARCH_PASSWORD')),
+        'verify_certs': os.environ.get('ELASTIC_SEARCH_VERIFY_CERTS'),
+
+    },
+}
