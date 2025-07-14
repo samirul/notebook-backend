@@ -291,3 +291,15 @@ ELASTICSEARCH_DSL = {
 
     },
 }
+
+ELASTICSEARCH_DSL_AUTOSYNC = True
+ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = 'django_elasticsearch_dsl.signals.CelerySignalProcessor'
+
+
+# Celery
+
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL_LINK')
+accept_content = ['application/json']
+result_serializer = 'json'
+task_serializer = 'json'
+timezone = os.environ.get('CELERY_TIMEZONE')
