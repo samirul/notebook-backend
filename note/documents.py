@@ -29,6 +29,4 @@ class NotesDocument(Document):
     
     class Django:
         model = Notes
-        fields = [
-            "title", "note_text"
-        ]
+        fields = ["title"]

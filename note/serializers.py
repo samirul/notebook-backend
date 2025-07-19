@@ -42,3 +42,7 @@ class CategorySerializerMenu(serializers.ModelSerializer):
 class CategorySearchViewSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     title = serializers.CharField()
+
+class NoteSearchViewSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    title = serializers.CharField()

@@ -75,6 +75,15 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
                     'notification': text
                 }
             )
+        elif event_type == 'notification_deleted_note':
+            await(self.channel_layer.group_send)(
+                    self.room_group_name,
+                {
+                    'type': 'send_notification_deleted_note',
+                    'notification': text
+                }
+            )
+
     
     async def disconnect(self, code):
         print("disconnected")
@@ -117,3 +126,13 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
             'type': 'created_note_error',
             'notification': value
         }))
+
+    async def send_notification_deleted_note(self, event):
+        value = event.get('notification')
+        await self.send(text_data=json.dumps({
+            'type': 'notification_deleted_note',
+            'notification': value
+        }))
+
+
+        

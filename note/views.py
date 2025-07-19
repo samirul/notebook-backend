@@ -4,11 +4,11 @@ from rest_framework.response import Response
 from .serializers import (NewCategorySerializer, CategoryListViewsSerializer, NewNoteSerializer,
                         CategorySerializerMenu)
 from .push_websocket import (created_category_note_send_notification, created_note_send_notification,
-                             deleted_category_note_send_notification)
-from .models import CategoryNotes
+                             deleted_category_note_send_notification, deleted_note_send_notification)
+from .models import CategoryNotes, Notes
 from .custom_create import CustomCategoryCreateMixins, CustomNoteCreateMixins
-from .elastic.elastic_category import elastic_search_category
-from .task.task import delete_category_instance_from_elastic_search
+from .elastic.elastic_category import elastic_search_category, elastic_search_note
+from .task.task import delete_category_instance_from_elastic_search, delete_note_instance_from_elastic_search
 
 
 class NewCategoryCreateView(CustomCategoryCreateMixins, generics.CreateAPIView):
@@ -74,10 +74,34 @@ class NotesListView(generics.ListAPIView):
                 "submenu": serializer.data
             })
     
+class NoteDestroyView(generics.DestroyAPIView):
+    queryset = Notes.objects.all()
+    serializer_class = NewNoteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        category_title = instance.title
+        delete_note_instance_from_elastic_search.delay(instance_id=instance.id)
+        self.perform_destroy(instance=instance)
+        deleted_note_send_notification(instance=category_title,
+                                                user_id=self.request.user.id)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    
 class CategorySearchView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
         total_page, page, page_size, serializer = elastic_search_category(request=request)
+        return Response({"count": total_page,
+                        "page": page,
+                        "page_size": page_size,
+                        "search_result": serializer.data})
+    
+class NoteSearchView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request):
+        total_page, page, page_size, serializer = elastic_search_note(request=request)
         return Response({"count": total_page,
                         "page": page,
                         "page_size": page_size,
