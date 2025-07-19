@@ -1,12 +1,14 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import (NewCategorySerializer, CategoryListViewsSerializer, NewNoteSerializer,
                         CategorySerializerMenu)
-from .push_websocket import created_category_note_send_notification, created_note_send_notification
+from .push_websocket import (created_category_note_send_notification, created_note_send_notification,
+                             deleted_category_note_send_notification)
 from .models import CategoryNotes
 from .custom_create import CustomCategoryCreateMixins, CustomNoteCreateMixins
 from .elastic.elastic_category import elastic_search_category
+from .task.task import delete_category_instance_from_elastic_search
 
 
 class NewCategoryCreateView(CustomCategoryCreateMixins, generics.CreateAPIView):
@@ -28,6 +30,21 @@ class CategoryListView(generics.ListAPIView):
     def get_queryset(self):
         query =  super().get_queryset()
         return query.filter(user=self.request.user)
+    
+class CategoryDestroyView(generics.DestroyAPIView):
+    queryset = CategoryNotes.objects.all()
+    serializer_class = CategoryListViewsSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        category_title = instance.title
+        delete_category_instance_from_elastic_search.delay(instance_id=instance.id)
+        self.perform_destroy(instance=instance)
+        deleted_category_note_send_notification(instance=category_title,
+                                                user_id=self.request.user.id)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     
 class NewNoteCreateView(CustomNoteCreateMixins, generics.CreateAPIView):
     serializer_class = NewNoteSerializer

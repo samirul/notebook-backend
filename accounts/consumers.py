@@ -50,6 +50,14 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
                     'notification': text
                 }
             )
+        elif event_type == 'notification_deleted_category':
+            await(self.channel_layer.group_send)(
+                    self.room_group_name,
+                {
+                    'type': 'send_notification_deleted_category',
+                    'notification': text
+                }
+            )
         elif event_type == 'notification_created_note':
             await(self.channel_layer.group_send)(
                     self.room_group_name,
@@ -85,6 +93,15 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
             'type': 'created_category_error',
             'notification': value
         }))
+
+    
+    async def send_notification_deleted_category(self, event):
+        value = event.get('notification')
+        await self.send(text_data=json.dumps({
+            'type': 'notification_deleted_category',
+            'notification': value
+        }))
+
 
     
     async def send_notification_created_note(self, event):
