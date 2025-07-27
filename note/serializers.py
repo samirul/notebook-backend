@@ -27,6 +27,20 @@ class NoteSerializerMenu(serializers.ModelSerializer):
 
     def get_path(self, obj):
         return f"/note/{obj.id}"
+    
+class NoteItemViewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notes
+        fields = ['id', 'title', 'category', 'note_text', 'created_at', 'updated_at']
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['category'] = CategoryListViewsSerializer(instance.category).data
+        created_at = instance.created_at
+        updated_at = instance.updated_at
+        rep['created_at'] = created_at.strftime('%Y-%m-%d %I:%M %p')
+        rep['updated_at'] = updated_at.strftime('%Y-%m-%d %I:%M %p')
+        return {"note": rep}
 
 class CategorySerializerMenu(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()

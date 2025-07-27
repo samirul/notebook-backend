@@ -2,7 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import (NewCategorySerializer, CategoryListViewsSerializer, NewNoteSerializer,
-                        CategorySerializerMenu)
+                        CategorySerializerMenu, NoteItemViewSerializer)
 from .push_websocket import (created_category_note_send_notification, created_note_send_notification,
                              deleted_category_note_send_notification, deleted_note_send_notification)
 from .models import CategoryNotes, Notes
@@ -73,6 +73,15 @@ class NotesListView(generics.ListAPIView):
                 "icon": "FaBook",
                 "submenu": serializer.data
             })
+class NoteItemView(generics.RetrieveAPIView):
+    queryset = Notes.objects.all()
+    serializer_class = NoteItemViewSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Notes.objects.filter(user=self.request.user)
+
+
     
 class NoteDestroyView(generics.DestroyAPIView):
     queryset = Notes.objects.all()
