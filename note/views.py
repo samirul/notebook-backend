@@ -27,14 +27,14 @@ class CategoryListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return CategoryNotes.objects.filter(author=self.request.user)
+        return CategoryNotes.objects.filter(user=self.request.user)
     
 class CategoryDestroyView(generics.DestroyAPIView):
     serializer_class = CategoryListViewsSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return CategoryNotes.objects.filter(author=self.request.user)
+        return CategoryNotes.objects.filter(user=self.request.user)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
