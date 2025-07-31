@@ -23,18 +23,18 @@ class NewCategoryCreateView(CustomCategoryCreateMixins, generics.CreateAPIView):
         
 
 class CategoryListView(generics.ListAPIView):
-    queryset = CategoryNotes.objects.all()
     serializer_class = CategoryListViewsSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        query =  super().get_queryset()
-        return query.filter(user=self.request.user)
+        return CategoryNotes.objects.filter(author=self.request.user)
     
 class CategoryDestroyView(generics.DestroyAPIView):
-    queryset = CategoryNotes.objects.all()
     serializer_class = CategoryListViewsSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return CategoryNotes.objects.filter(author=self.request.user)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -73,8 +73,8 @@ class NotesListView(generics.ListAPIView):
                 "icon": "FaBook",
                 "submenu": serializer.data
             })
+    
 class NoteItemView(generics.RetrieveAPIView):
-    queryset = Notes.objects.all()
     serializer_class = NoteItemViewSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -84,9 +84,11 @@ class NoteItemView(generics.RetrieveAPIView):
 
     
 class NoteDestroyView(generics.DestroyAPIView):
-    queryset = Notes.objects.all()
     serializer_class = NewNoteSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Notes.objects.filter(user=self.request.user)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
