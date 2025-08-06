@@ -12,10 +12,9 @@ def elastic_search_category(request):
         "bool",
         must=[
             {
-                "match": {
+                "match_phrase_prefix": {
                     "title": {
                         "query": query,
-                        "fuzziness": "AUTO"
                     }
                 }
             }
@@ -45,10 +44,9 @@ def elastic_search_note(request):
         "bool",
         must=[
             {
-                "match": {
+                "match_phrase_prefix": {
                     "title": {
                         "query": query,
-                        "fuzziness": "AUTO"
                     }
                 }
             }

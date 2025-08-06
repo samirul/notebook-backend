@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,7 +10,6 @@ from .models import CategoryNotes, Notes
 from .custom_create import CustomCategoryCreateMixins, CustomNoteCreateMixins
 from .elastic.elastic_category import elastic_search_category, elastic_search_note
 from .task.task import delete_category_instance_from_elastic_search, delete_note_instance_from_elastic_search
-
 
 class NewCategoryCreateView(CustomCategoryCreateMixins, generics.CreateAPIView):
     serializer_class = NewCategorySerializer
@@ -81,7 +81,18 @@ class NoteItemView(generics.RetrieveAPIView):
     def get_queryset(self):
         return Notes.objects.filter(user=self.request.user)
 
-
+    def retrieve(self, request, *args, **kwargs):
+        pk = kwargs.get('pk')
+        key = {"key_cache": f"user_notes_id_{pk}_user_id_{request.user.id}_cache"}
+        cache_data = cache.get(key=key.get("key_cache"))
+        if cache_data is not None:
+            return Response(cache_data)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        cache.set(key.get("key_cache"), data, timeout=300)
+        return Response(data)
+    
     
 class NoteDestroyView(generics.DestroyAPIView):
     serializer_class = NewNoteSerializer
@@ -92,7 +103,10 @@ class NoteDestroyView(generics.DestroyAPIView):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
+        pk = kwargs.get('pk')
+        key = {"key_cache": f"user_notes_id_{pk}_user_id_{request.user.id}_cache"}
         category_title = instance.title
+        cache.delete(key.get("key_cache"))
         delete_note_instance_from_elastic_search.delay(instance_id=instance.id)
         self.perform_destroy(instance=instance)
         deleted_note_send_notification(instance=category_title,
