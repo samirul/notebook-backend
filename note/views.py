@@ -93,7 +93,21 @@ class NoteItemView(generics.RetrieveAPIView):
         cache.set(key.get("key_cache"), data, timeout=300)
         return Response(data)
     
-    
+
+class NoteUpdateView(generics.UpdateAPIView):
+    serializer_class = NoteItemViewSerializer
+    http_method_names = ['patch']
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Notes.objects.filter(user=self.request.user)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        key = {"key_cache": f"user_notes_id_{instance.id}_user_id_{self.request.user.id}_cache"}
+        cache.delete(key=key.get("key_cache"))
+        
+
 class NoteDestroyView(generics.DestroyAPIView):
     serializer_class = NewNoteSerializer
     permission_classes = [permissions.IsAuthenticated]
