@@ -1,3 +1,5 @@
+import os
+import configparser
 from django.core.cache import cache
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
@@ -12,11 +14,21 @@ from .elastic.elastic_category import elastic_search_category, elastic_search_no
 from .task.task import delete_category_instance_from_elastic_search, delete_note_instance_from_elastic_search
 from rate_limiter.limiter import rate_limiter
 
-MAX_TRIES_GET_VIEWS = 1000
-MAX_TRIES_DELETE_VIEWS = 20
-MAX_TRIES_UPDATE_VIEWS = 20
-MAX_TRIES_SEARCH_VIEWS = 500
-TIME_IN_SECONDS = 900
+
+file_dir = os.path.dirname(__file__)
+config = configparser.ConfigParser()
+
+# Make a full path to the config file
+config_file_path_ini = os.path.join(file_dir, '../rate_limiter/config/', 'rate_limit.ini')
+# Read ini file
+config.read(config_file_path_ini)
+# Fetch ini configs
+max_tries_get_views = config.get('configuration', 'MAX_TRIES_GET_VIEWS')
+max_tries_update_views = config.get('configuration', 'MAX_TRIES_UPDATE_VIEWS')
+max_tries_delete_views = config.get('configuration', 'MAX_TRIES_DELETE_VIEWS')
+max_tries_search_views = config.get('configuration', 'MAX_TRIES_SEARCH_VIEWS')
+max_time_in_seconds = config.get('configuration', 'MAX_TIME_IN_SECONDS')
+
 
 class NewCategoryCreateView(CustomCategoryCreateMixins, generics.CreateAPIView):
     serializer_class = NewCategorySerializer
@@ -36,7 +48,7 @@ class CategoryListView(generics.ListAPIView):
     def get_queryset(self):
         return CategoryNotes.objects.filter(user=self.request.user)
     
-    @rate_limiter(max_requests=int(MAX_TRIES_GET_VIEWS), time_window=int(TIME_IN_SECONDS))
+    @rate_limiter(max_requests=int(max_tries_get_views), time_window=int(max_time_in_seconds))
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
@@ -48,7 +60,7 @@ class CategoryDestroyView(generics.DestroyAPIView):
     def get_queryset(self):
         return CategoryNotes.objects.filter(user=self.request.user)
     
-    @rate_limiter(max_requests=int(MAX_TRIES_DELETE_VIEWS), time_window=int(TIME_IN_SECONDS))
+    @rate_limiter(max_requests=int(max_tries_delete_views), time_window=int(max_time_in_seconds))
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         category_title = instance.title
@@ -79,7 +91,7 @@ class NotesListView(generics.ListAPIView):
         query =  super().get_queryset()
         return query.filter(user=self.request.user)
     
-    @rate_limiter(max_requests=int(MAX_TRIES_GET_VIEWS), time_window=int(TIME_IN_SECONDS))
+    @rate_limiter(max_requests=int(max_tries_get_views), time_window=int(max_time_in_seconds))
     def list(self, request, *args, **kwargs):
             queryset = self.get_queryset()
             serializer = self.get_serializer(queryset, many=True)
@@ -97,7 +109,7 @@ class NoteItemView(generics.RetrieveAPIView):
     def get_queryset(self):
         return Notes.objects.filter(user=self.request.user)
     
-    @rate_limiter(max_requests=int(MAX_TRIES_GET_VIEWS), time_window=int(TIME_IN_SECONDS))
+    @rate_limiter(max_requests=int(max_tries_get_views), time_window=int(max_time_in_seconds))
     def retrieve(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
         key = {"key_cache": f"user_notes_id_{pk}_user_id_{request.user.id}_cache"}
@@ -119,7 +131,7 @@ class NoteUpdateView(generics.UpdateAPIView):
     def get_queryset(self):
         return Notes.objects.filter(user=self.request.user)
     
-    @rate_limiter(max_requests=int(MAX_TRIES_UPDATE_VIEWS), time_window=int(TIME_IN_SECONDS))
+    @rate_limiter(max_requests=int(max_tries_update_views), time_window=int(max_time_in_seconds))
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
 
@@ -136,7 +148,7 @@ class NoteDestroyView(generics.DestroyAPIView):
     def get_queryset(self):
         return Notes.objects.filter(user=self.request.user)
     
-    @rate_limiter(max_requests=int(MAX_TRIES_DELETE_VIEWS), time_window=int(TIME_IN_SECONDS))
+    @rate_limiter(max_requests=int(max_tries_delete_views), time_window=int(max_time_in_seconds))
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         pk = kwargs.get('pk')
@@ -154,7 +166,7 @@ class CategorySearchView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get']
 
-    @rate_limiter(max_requests=int(MAX_TRIES_SEARCH_VIEWS), time_window=int(TIME_IN_SECONDS))
+    @rate_limiter(max_requests=int(max_tries_search_views), time_window=int(max_time_in_seconds))
     def get(self, request):
         total_page, page, page_size, serializer = elastic_search_category(request=request)
         return Response({"count": total_page,
@@ -166,7 +178,7 @@ class NoteSearchView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get']
 
-    @rate_limiter(max_requests=int(MAX_TRIES_SEARCH_VIEWS), time_window=int(TIME_IN_SECONDS))
+    @rate_limiter(max_requests=int(max_tries_search_views), time_window=int(max_time_in_seconds))
     def get(self, request):
         total_page, page, page_size, serializer = elastic_search_note(request=request)
         return Response({"count": total_page,

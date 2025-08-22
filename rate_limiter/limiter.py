@@ -27,7 +27,6 @@ def rate_limiter(max_requests: int, time_window: int):
                 retry_after_as_timeout = redis_client.ttl(name=redis_key)
                 send_rate_limit_error_note_send_notification(
                     instance=retry_after_as_timeout,
-                    path=endpoint,
                     user_id=request.user.id
                 )
                 raise Throttled(detail=f"Max tries exceed, Try again after {retry_after_as_timeout} seconds.")
