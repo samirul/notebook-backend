@@ -29,3 +29,6 @@ class RegisterSerializer(DefaultSerializer):
         if bloom_filter_username_check == 1:
             raise serializers.ValidationError("This username already taken.")
         return username
+    
+class CheckLoggedUserStatusSerializer(serializers.Serializer):
+    logged_in = serializers.CharField(max_length=10)

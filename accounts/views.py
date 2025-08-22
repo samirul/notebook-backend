@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.response import Response
-from accounts.serializers import GetUserSerializer
+from accounts.serializers import GetUserSerializer, CheckLoggedUserStatusSerializer
 
 
 class GoogleLoginViews(SocialLoginView):
@@ -23,6 +23,14 @@ class GoogleLoginViews(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
     callback_url = "http://localhost:8080"
     client_class = OAuth2Client
+
+class CheckLoggedUserStatus(APIView):
+    def get(self, request):
+        access_token = request.COOKIES.get('access_token')
+        status_item = {'logged_in': 'yes' if access_token is not None else 'no'}
+        serializer = CheckLoggedUserStatusSerializer(status_item)
+        return Response({'item': serializer.data}, status=status.HTTP_200_OK)
+        
 
 class GetUser(APIView):
     """For fetching user or user information after login user.

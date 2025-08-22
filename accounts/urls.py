@@ -7,7 +7,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from accounts.views import GoogleLoginViews, GetUser
+from accounts.views import GoogleLoginViews, GetUser, CheckLoggedUserStatus
 
 urlpatterns = [
     path("api/social/login/google/", GoogleLoginViews.as_view(), name='google'),
@@ -15,6 +15,7 @@ urlpatterns = [
     path('user/<str:token>/', GoogleLoginViews.as_view(), name='user'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/logged/status/', CheckLoggedUserStatus.as_view(), name="logged_status"),
     path('user/', GetUser.as_view(), name='get_user'),
     
 ]
