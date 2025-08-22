@@ -3,8 +3,8 @@ from rest_framework import status
 from .push_websocket import created_category_error_note_send_notification, created_error_note_send_notification
 from rate_limiter.limiter import rate_limiter
 
-MAX_TRIES_CREATE_VIEWS = 5
-TIME_IN_SECONDS = 300
+MAX_TRIES_CREATE_VIEWS = 20
+TIME_IN_SECONDS = 900
 
 class CustomCategoryCreateMixins:
     @rate_limiter(max_requests=int(MAX_TRIES_CREATE_VIEWS), time_window=int(TIME_IN_SECONDS))

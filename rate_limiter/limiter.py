@@ -1,6 +1,7 @@
 import os
 import redis
 from rest_framework.exceptions import Throttled
+from .rate_push_websocket  import send_rate_limit_error_note_send_notification
 
 redis_client = redis.StrictRedis(
     host=os.environ.get('REDIS_HOST'),
@@ -24,6 +25,11 @@ def rate_limiter(max_requests: int, time_window: int):
                 redis_client.incr(name=redis_key)
             else:
                 retry_after_as_timeout = redis_client.ttl(name=redis_key)
+                send_rate_limit_error_note_send_notification(
+                    instance=retry_after_as_timeout,
+                    path=endpoint,
+                    user_id=request.user.id
+                )
                 raise Throttled(detail=f"Max tries exceed, Try again after {retry_after_as_timeout} seconds.")
             return func(self, request, *args, **kwargs)
         return wrapper

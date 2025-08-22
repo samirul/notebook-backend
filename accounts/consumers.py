@@ -30,7 +30,6 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
         data = json.loads(text_data)
-        print(data)
         event_type = data.get('type')
         text = data.get('notification')
         if event_type == 'notification_created_category':
@@ -83,6 +82,14 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
                     'notification': text
                 }
             )
+        elif event_type == 'notification_rate_limited':
+            await(self.channel_layer.group_send)(
+                    self.room_group_name,
+                {
+                    'type': 'notification_rate_limited',
+                    'notification': text
+                }
+            )
 
     
     async def disconnect(self, code):
@@ -131,6 +138,13 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
         value = event.get('notification')
         await self.send(text_data=json.dumps({
             'type': 'notification_deleted_note',
+            'notification': value
+        }))
+
+    async def send_notification_rate_limited(self, event):
+        value = event.get('notification')
+        await self.send(text_data=json.dumps({
+            'type': 'notification_rate_limited',
             'notification': value
         }))
 

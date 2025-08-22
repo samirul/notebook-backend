@@ -12,11 +12,11 @@ from .elastic.elastic_category import elastic_search_category, elastic_search_no
 from .task.task import delete_category_instance_from_elastic_search, delete_note_instance_from_elastic_search
 from rate_limiter.limiter import rate_limiter
 
-MAX_TRIES_GET_VIEWS = 10
-MAX_TRIES_DELETE_VIEWS = 5
-MAX_TRIES_UPDATE_VIEWS = 5
-MAX_TRIES_SEARCH_VIEWS = 20
-TIME_IN_SECONDS = 300
+MAX_TRIES_GET_VIEWS = 1000
+MAX_TRIES_DELETE_VIEWS = 20
+MAX_TRIES_UPDATE_VIEWS = 20
+MAX_TRIES_SEARCH_VIEWS = 500
+TIME_IN_SECONDS = 900
 
 class NewCategoryCreateView(CustomCategoryCreateMixins, generics.CreateAPIView):
     serializer_class = NewCategorySerializer
