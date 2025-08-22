@@ -26,8 +26,7 @@ def clear_caches(user, pk=None):
           }
     cache.delete(key=key.get("key_cache_categories"))
     cache.delete(key=key.get("key_cache_notes"))
-    if pk is not None:
-        cache.delete(key=key.get("key_cache_single_note"))
+    cache.delete(key=key.get("key_cache_single_note"))
 
 
 
