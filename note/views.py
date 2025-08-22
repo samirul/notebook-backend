@@ -9,7 +9,7 @@ from .serializers import (NewCategorySerializer, CategoryListViewsSerializer, Ne
 from .push_websocket import (created_category_note_send_notification, created_note_send_notification,
                              deleted_category_note_send_notification, deleted_note_send_notification)
 from .models import CategoryNotes, Notes
-from .custom_create import CustomCategoryCreateMixins, CustomNoteCreateMixins
+from .custom_create import CustomCategoryCreateMixins, CustomNoteCreateMixins, clear_caches
 from .elastic.elastic_category import elastic_search_category, elastic_search_note
 from .task.task import delete_category_instance_from_elastic_search, delete_note_instance_from_elastic_search
 from rate_limiter.limiter import rate_limiter
@@ -73,8 +73,9 @@ class CategoryDestroyView(generics.DestroyAPIView):
         category_title = instance.title
         delete_category_instance_from_elastic_search.delay(instance_id=instance.id)
         self.perform_destroy(instance=instance)
+        clear_caches(user=request.user)
         deleted_category_note_send_notification(instance=category_title,
-                                                user_id=self.request.user.id)
+                                            user_id=self.request.user.id)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
  
@@ -164,14 +165,11 @@ class NoteDestroyView(generics.DestroyAPIView):
     @rate_limiter(max_requests=int(max_tries_delete_views), time_window=int(max_time_in_seconds))
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        pk = kwargs.get('pk')
-        key = {"key_cache": f"user_notes_id_{pk}_user_id_{request.user.id}_cache"}
-        category_title = instance.title
-        cache.delete(key.get("key_cache"))
+        clear_caches(user=request.user, pk=kwargs.get('pk'))
         delete_note_instance_from_elastic_search.delay(instance_id=instance.id)
         self.perform_destroy(instance=instance)
-        deleted_note_send_notification(instance=category_title,
-                                                user_id=self.request.user.id)
+        deleted_note_send_notification(instance=instance.title,
+                                      user_id=self.request.user.id)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     

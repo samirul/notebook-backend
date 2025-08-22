@@ -19,12 +19,16 @@ max_tries_create_views = config.get('configuration', 'MAX_TRIES_CREATE_VIEWS')
 max_time_in_seconds = config.get('configuration', 'MAX_TIME_IN_SECONDS')
 
 
-def clear_caches(user):
+def clear_caches(user, pk=None):
     key = {"key_cache_categories": f"user_category_user_id_{user.id}_cache",
-               "key_cache_notes": f"user_notes_user_id_{user.id}_cache"
-               }
+            "key_cache_notes": f"user_notes_user_id_{user.id}_cache",
+            "key_cache_single_note": f"user_notes_id_{pk}_user_id_{user.id}_cache"
+          }
     cache.delete(key=key.get("key_cache_categories"))
     cache.delete(key=key.get("key_cache_notes"))
+    if pk is not None:
+        cache.delete(key=key.get("key_cache_single_note"))
+
 
 
 class CustomCategoryCreateMixins:
