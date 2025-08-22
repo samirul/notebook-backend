@@ -28,14 +28,17 @@ def clear_caches(user):
 
 
 class CustomCategoryCreateMixins:
-    @rate_limiter(max_requests=int(max_tries_create_views), time_window=int(max_time_in_seconds))
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+    def handle_serializer(self, serializer, user):
         if not serializer.is_valid():
             self.get_serializer_error(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         self.perform_create(serializer)
-        clear_caches(user=request.user)
+        clear_caches(user=user)
+
+    @rate_limiter(max_requests=int(max_tries_create_views), time_window=int(max_time_in_seconds))
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        self.handle_serializer(serializer=serializer, user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     def get_serializer_error(self, errors):
@@ -45,15 +48,19 @@ class CustomCategoryCreateMixins:
         )
 
 class CustomNoteCreateMixins:
-    @rate_limiter(max_requests=int(max_tries_create_views), time_window=int(max_time_in_seconds))
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+    def handle_serializer(self, serializer, user):
         if not serializer.is_valid():
             self.get_serializer_error(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         self.perform_create(serializer)
-        clear_caches(user=request.user)
+        clear_caches(user=user)
+
+    @rate_limiter(max_requests=int(max_tries_create_views), time_window=int(max_time_in_seconds))
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        self.handle_serializer(serializer=serializer, user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
     
     def get_serializer_error(self, errors):
         if errors.get('note_text'):
