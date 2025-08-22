@@ -1,5 +1,6 @@
 import os
 import configparser
+from django.core.cache import cache
 from rest_framework.response import Response
 from rest_framework import status
 from rate_limiter.limiter import rate_limiter
@@ -26,6 +27,8 @@ class CustomCategoryCreateMixins:
             self.get_serializer_error(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         self.perform_create(serializer)
+        key = {"key_cache": f"user_category_user_id_{request.user.id}_cache"}
+        cache.delete(key=key.get("key_cache"))
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     def get_serializer_error(self, errors):
