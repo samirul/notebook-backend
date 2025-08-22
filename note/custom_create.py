@@ -19,6 +19,14 @@ max_tries_create_views = config.get('configuration', 'MAX_TRIES_CREATE_VIEWS')
 max_time_in_seconds = config.get('configuration', 'MAX_TIME_IN_SECONDS')
 
 
+def clear_caches(user):
+    key = {"key_cache_categories": f"user_category_user_id_{user.id}_cache",
+               "key_cache_notes": f"user_notes_user_id_{user.id}_cache"
+               }
+    cache.delete(key=key.get("key_cache_categories"))
+    cache.delete(key=key.get("key_cache_notes"))
+
+
 class CustomCategoryCreateMixins:
     @rate_limiter(max_requests=int(max_tries_create_views), time_window=int(max_time_in_seconds))
     def create(self, request, *args, **kwargs):
@@ -27,8 +35,7 @@ class CustomCategoryCreateMixins:
             self.get_serializer_error(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         self.perform_create(serializer)
-        key = {"key_cache_categories": f"user_category_user_id_{request.user.id}_cache"}
-        cache.delete(key=key.get("key_cache_categories"))
+        clear_caches(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     def get_serializer_error(self, errors):
@@ -45,6 +52,7 @@ class CustomNoteCreateMixins:
             self.get_serializer_error(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         self.perform_create(serializer)
+        clear_caches(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     def get_serializer_error(self, errors):
