@@ -100,13 +100,19 @@ class NotesListView(generics.ListAPIView):
     
     @rate_limiter(max_requests=int(max_tries_get_views), time_window=int(max_time_in_seconds))
     def list(self, request, *args, **kwargs):
-            queryset = self.get_queryset()
-            serializer = self.get_serializer(queryset, many=True)
-            return Response({
-                "title": "Notes",
-                "icon": "FaBook",
-                "submenu": serializer.data
-            })
+        key = {"key_cache": f"user_notes_user_id_{request.user.id}_cache"}
+        cache_data = cache.get(key=key.get("key_cache"))
+        if cache_data is not None:
+            return Response(cache_data)
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        data = {
+            "title": "Notes",
+            "icon": "FaBook",
+            "submenu": serializer.data 
+        }
+        cache.set(key.get("key_cache"), data, timeout=300)
+        return Response(data)
 
 
 class NoteItemView(generics.RetrieveAPIView):
