@@ -10,6 +10,13 @@ from .models import CategoryNotes, Notes
 from .custom_create import CustomCategoryCreateMixins, CustomNoteCreateMixins
 from .elastic.elastic_category import elastic_search_category, elastic_search_note
 from .task.task import delete_category_instance_from_elastic_search, delete_note_instance_from_elastic_search
+from rate_limiter.limiter import rate_limiter
+
+MAX_TRIES_GET_VIEWS = 10
+MAX_TRIES_DELETE_VIEWS = 5
+MAX_TRIES_UPDATE_VIEWS = 5
+MAX_TRIES_SEARCH_VIEWS = 20
+TIME_IN_SECONDS = 300
 
 class NewCategoryCreateView(CustomCategoryCreateMixins, generics.CreateAPIView):
     serializer_class = NewCategorySerializer
@@ -29,13 +36,19 @@ class CategoryListView(generics.ListAPIView):
     def get_queryset(self):
         return CategoryNotes.objects.filter(user=self.request.user)
     
+    @rate_limiter(max_requests=int(MAX_TRIES_GET_VIEWS), time_window=int(TIME_IN_SECONDS))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+
 class CategoryDestroyView(generics.DestroyAPIView):
     serializer_class = CategoryListViewsSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return CategoryNotes.objects.filter(user=self.request.user)
-
+    
+    @rate_limiter(max_requests=int(MAX_TRIES_DELETE_VIEWS), time_window=int(TIME_IN_SECONDS))
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         category_title = instance.title
@@ -45,7 +58,7 @@ class CategoryDestroyView(generics.DestroyAPIView):
                                                 user_id=self.request.user.id)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    
+ 
 class NewNoteCreateView(CustomNoteCreateMixins, generics.CreateAPIView):
     serializer_class = NewNoteSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -56,6 +69,7 @@ class NewNoteCreateView(CustomNoteCreateMixins, generics.CreateAPIView):
        instance=instance, user_id=self.request.user.id
        )
 
+
 class NotesListView(generics.ListAPIView):
     queryset = CategoryNotes.objects.prefetch_related('notes_category')
     serializer_class = CategorySerializerMenu
@@ -65,6 +79,7 @@ class NotesListView(generics.ListAPIView):
         query =  super().get_queryset()
         return query.filter(user=self.request.user)
     
+    @rate_limiter(max_requests=int(MAX_TRIES_GET_VIEWS), time_window=int(TIME_IN_SECONDS))
     def list(self, request, *args, **kwargs):
             queryset = self.get_queryset()
             serializer = self.get_serializer(queryset, many=True)
@@ -73,14 +88,16 @@ class NotesListView(generics.ListAPIView):
                 "icon": "FaBook",
                 "submenu": serializer.data
             })
-    
+
+
 class NoteItemView(generics.RetrieveAPIView):
     serializer_class = NoteItemViewSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Notes.objects.filter(user=self.request.user)
-
+    
+    @rate_limiter(max_requests=int(MAX_TRIES_GET_VIEWS), time_window=int(TIME_IN_SECONDS))
     def retrieve(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
         key = {"key_cache": f"user_notes_id_{pk}_user_id_{request.user.id}_cache"}
@@ -92,7 +109,7 @@ class NoteItemView(generics.RetrieveAPIView):
         data = serializer.data
         cache.set(key.get("key_cache"), data, timeout=300)
         return Response(data)
-    
+
 
 class NoteUpdateView(generics.UpdateAPIView):
     serializer_class = NoteItemViewSerializer
@@ -101,6 +118,10 @@ class NoteUpdateView(generics.UpdateAPIView):
 
     def get_queryset(self):
         return Notes.objects.filter(user=self.request.user)
+    
+    @rate_limiter(max_requests=int(MAX_TRIES_UPDATE_VIEWS), time_window=int(TIME_IN_SECONDS))
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
 
     def perform_update(self, serializer):
         instance = serializer.save()
@@ -114,7 +135,8 @@ class NoteDestroyView(generics.DestroyAPIView):
 
     def get_queryset(self):
         return Notes.objects.filter(user=self.request.user)
-
+    
+    @rate_limiter(max_requests=int(MAX_TRIES_DELETE_VIEWS), time_window=int(TIME_IN_SECONDS))
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         pk = kwargs.get('pk')
@@ -130,6 +152,9 @@ class NoteDestroyView(generics.DestroyAPIView):
     
 class CategorySearchView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get']
+
+    @rate_limiter(max_requests=int(MAX_TRIES_SEARCH_VIEWS), time_window=int(TIME_IN_SECONDS))
     def get(self, request):
         total_page, page, page_size, serializer = elastic_search_category(request=request)
         return Response({"count": total_page,
@@ -139,6 +164,9 @@ class CategorySearchView(APIView):
     
 class NoteSearchView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get']
+
+    @rate_limiter(max_requests=int(MAX_TRIES_SEARCH_VIEWS), time_window=int(TIME_IN_SECONDS))
     def get(self, request):
         total_page, page, page_size, serializer = elastic_search_note(request=request)
         return Response({"count": total_page,
