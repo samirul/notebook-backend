@@ -50,7 +50,13 @@ class CategoryListView(generics.ListAPIView):
     
     @rate_limiter(max_requests=int(max_tries_get_views), time_window=int(max_time_in_seconds))
     def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+        key = {"key_cache": f"user_category_user_id_{request.user.id}_cache"}
+        cache_data = cache.get(key=key.get("key_cache"))
+        if cache_data is not None:
+            return Response(cache_data)
+        instance = super().list(request, *args, **kwargs)
+        cache.set(key.get("key_cache"), instance.data, timeout=300)
+        return Response(instance.data)
 
 
 class CategoryDestroyView(generics.DestroyAPIView):
