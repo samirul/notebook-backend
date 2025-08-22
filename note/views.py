@@ -54,9 +54,10 @@ class CategoryListView(generics.ListAPIView):
         cache_data = cache.get(key=key.get("key_cache"))
         if cache_data is not None:
             return Response(cache_data)
-        instance = super().list(request, *args, **kwargs)
-        cache.set(key.get("key_cache"), instance.data, timeout=300)
-        return Response(instance.data)
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        cache.set(key.get("key_cache"), serializer.data, timeout=300)
+        return Response(serializer.data)
 
 
 class CategoryDestroyView(generics.DestroyAPIView):
