@@ -46,6 +46,15 @@ def created_error_note_send_notification(error, user_id):
             }
         )
 
+def update_note_send_notification(instance, user_id):
+    async_to_sync(channel_layer.group_send)(
+        f"{os.environ.get("CHANNEL_ROOM_GROUP")}_{user_id}",{
+            "type": "send_notification_updated_note",
+            'notification': f"{str(instance)} note is updated successfully."
+        }
+    )
+        
+
 def deleted_note_send_notification(instance, user_id):
         async_to_sync(channel_layer.group_send)(
             f"{os.environ.get("CHANNEL_ROOM_GROUP")}_{user_id}",{

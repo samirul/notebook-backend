@@ -7,7 +7,8 @@ from rest_framework.response import Response
 from .serializers import (NewCategorySerializer, CategoryListViewsSerializer, NewNoteSerializer,
                         CategorySerializerMenu, NoteItemViewSerializer)
 from .push_websocket import (created_category_note_send_notification, created_note_send_notification,
-                             deleted_category_note_send_notification, deleted_note_send_notification)
+                             deleted_category_note_send_notification, deleted_note_send_notification,
+                             update_note_send_notification)
 from .models import CategoryNotes, Notes
 from .custom_create import CustomCategoryCreateMixins, CustomNoteCreateMixins, clear_caches
 from .elastic.elastic_category import elastic_search_category, elastic_search_note
@@ -152,6 +153,8 @@ class NoteUpdateView(generics.UpdateAPIView):
     def perform_update(self, serializer):
         instance = serializer.save()
         clear_caches(user=self.request.user, pk=instance.id)
+        update_note_send_notification(instance=instance,
+                                            user_id=self.request.user.id)
         
 
 class NoteDestroyView(generics.DestroyAPIView):

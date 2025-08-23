@@ -82,6 +82,14 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
                     'notification': text
                 }
             )
+        elif event_type == 'notification_updated_note':
+            await(self.channel_layer.group_send)(
+                    self.room_group_name,
+                {
+                    'type': 'send_notification_updated_note',
+                    'notification': text
+                }
+            )
         elif event_type == 'notification_rate_limited':
             await(self.channel_layer.group_send)(
                     self.room_group_name,
@@ -131,6 +139,13 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
         value = event.get('notification')
         await self.send(text_data=json.dumps({
             'type': 'created_note_error',
+            'notification': value
+        }))
+    
+    async def send_notification_updated_note(self, event):
+        value = event.get('notification')
+        await self.send(text_data=json.dumps({
+            'type': 'notification_updated_note',
             'notification': value
         }))
 
