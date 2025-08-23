@@ -151,8 +151,7 @@ class NoteUpdateView(generics.UpdateAPIView):
 
     def perform_update(self, serializer):
         instance = serializer.save()
-        key = {"key_cache": f"user_notes_id_{instance.id}_user_id_{self.request.user.id}_cache"}
-        cache.delete(key=key.get("key_cache"))
+        clear_caches(user=self.request.id, pk=instance.id)
         
 
 class NoteDestroyView(generics.DestroyAPIView):
