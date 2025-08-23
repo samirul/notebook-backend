@@ -28,20 +28,19 @@ def clear_caches(user, pk=None):
     cache.delete(key=key.get("key_cache_notes"))
     cache.delete(key=key.get("key_cache_single_note"))
 
+def handle_serializer(serializer, serializer_error, perform_create, user):
+    if not serializer.is_valid():
+        serializer_error(serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    perform_create(serializer)
+    clear_caches(user=user)
 
 
 class CustomCategoryCreateMixins:
-    def handle_serializer(self, serializer, user):
-        if not serializer.is_valid():
-            self.get_serializer_error(serializer.errors)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        self.perform_create(serializer)
-        clear_caches(user=user)
-
     @rate_limiter(max_requests=int(max_tries_create_views), time_window=int(max_time_in_seconds))
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        self.handle_serializer(serializer=serializer, user=request.user)
+        handle_serializer(serializer, self.get_serializer_error, self.perform_create, request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     def get_serializer_error(self, errors):
@@ -51,17 +50,10 @@ class CustomCategoryCreateMixins:
         )
 
 class CustomNoteCreateMixins:
-    def handle_serializer(self, serializer, user):
-        if not serializer.is_valid():
-            self.get_serializer_error(serializer.errors)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        self.perform_create(serializer)
-        clear_caches(user=user)
-
     @rate_limiter(max_requests=int(max_tries_create_views), time_window=int(max_time_in_seconds))
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        self.handle_serializer(serializer=serializer, user=request.user)
+        handle_serializer(serializer, self.get_serializer_error, self.perform_create, request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     
