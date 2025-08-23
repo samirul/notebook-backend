@@ -151,7 +151,7 @@ class NoteUpdateView(generics.UpdateAPIView):
 
     def perform_update(self, serializer):
         instance = serializer.save()
-        clear_caches(user=self.request.id, pk=instance.id)
+        clear_caches(user=self.request.user, pk=instance.id)
         
 
 class NoteDestroyView(generics.DestroyAPIView):
