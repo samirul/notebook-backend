@@ -46,6 +46,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     'django_elasticsearch_dsl',
     'django_elasticsearch_dsl_drf',
+    'django_celery_results',
     # "django_admin_logs",
 
     # Social Authentication
@@ -268,8 +269,8 @@ AUTHENTICATION_BACKENDS = (
 STATIC_URL = "/static/"
 MEDIA_URL = '/media/'
 
-STATIC_ROOT = "/static"
-MEDIA_ROOT = "/media"
+STATIC_ROOT = "/static/"
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -292,13 +293,10 @@ ELASTICSEARCH_DSL = {
     },
 }
 
-ELASTICSEARCH_DSL_AUTOSYNC = True
-ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = 'django_elasticsearch_dsl.signals.CelerySignalProcessor'
-
-
 # Celery
 
-CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL_LINK')
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_BROKER_URL')
 accept_content = ['application/json']
 result_serializer = 'json'
 task_serializer = 'json'

@@ -99,6 +99,15 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
                 }
             )
 
+        elif event_type == 'notification_downloading':
+            await(self.channel_layer.group_send)(
+                    self.room_group_name,
+                {
+                    'type': 'send_notification_downloading',
+                    'notification': text
+                }
+            )
+
     
     async def disconnect(self, code):
         print("disconnected")
@@ -162,6 +171,16 @@ class NotificationtConsumer(AsyncWebsocketConsumer):
             'type': 'notification_rate_limited',
             'notification': value
         }))
+
+    async def send_notification_downloading(self, event):
+        value = event.get('notification')
+        await self.send(text_data=json.dumps({
+            'type': 'notification_downloading',
+            'notification': value
+        }))
+
+
+
 
 
         

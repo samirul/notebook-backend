@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (NewCategoryCreateView, CategoryListView, NewNoteCreateView,
                     NotesListView, NoteItemView, CategorySearchView, CategoryDestroyView, NoteSearchView,
-                    NoteUpdateView, NoteDestroyView)
+                    NoteUpdateView, NoteDestroyView, PDFDownloader, PdfStatusView, GetPDFFileView)
 
 urlpatterns = [
     # Category
@@ -16,4 +16,8 @@ urlpatterns = [
     path('note/search/', NoteSearchView.as_view(), name='note-search'),
     path('note/<str:pk>/update/', NoteUpdateView.as_view(), name='note-update'),
     path('note/delete/<str:pk>/', NoteDestroyView.as_view(), name='note-delete'),
+    #PDF Download
+    path('note/download/', PDFDownloader.as_view(), name='pdf-download'),
+    path('pdf-status/<str:task_id>/', PdfStatusView.as_view(), name='pdf-status'),
+    path('media/pdf/<str:filename>/', GetPDFFileView.as_view(), name='download-pdf'),
 ]

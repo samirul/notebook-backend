@@ -1,19 +1,23 @@
 import os
 import configparser
+import contextlib
 from django.core.cache import cache
+from django.http import FileResponse
+from django.conf import settings
+from celery.result import AsyncResult
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rate_limiter.limiter import rate_limiter
 from .serializers import (NewCategorySerializer, CategoryListViewsSerializer, NewNoteSerializer,
-                        CategorySerializerMenu, NoteItemViewSerializer)
+                        CategorySerializerMenu, NoteItemViewSerializer, PDFFileDownloadSerializer)
 from .push_websocket import (created_category_note_send_notification, created_note_send_notification,
                              deleted_category_note_send_notification, deleted_note_send_notification,
                              update_note_send_notification)
 from .models import CategoryNotes, Notes
 from .custom_create import CustomCategoryCreateMixins, CustomNoteCreateMixins, clear_caches
 from .elastic.elastic_category import elastic_search_category, elastic_search_note
-from .task.task import delete_category_instance_from_elastic_search, delete_note_instance_from_elastic_search
-from rate_limiter.limiter import rate_limiter
+from .task.task import download_pdf
 
 
 file_dir = os.path.dirname(__file__)
@@ -72,7 +76,6 @@ class CategoryDestroyView(generics.DestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         category_title = instance.title
-        delete_category_instance_from_elastic_search.delay(instance_id=instance.id)
         self.perform_destroy(instance=instance)
         clear_caches(user=request.user)
         deleted_category_note_send_notification(instance=category_title,
@@ -168,7 +171,6 @@ class NoteDestroyView(generics.DestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         clear_caches(user=request.user, pk=kwargs.get('pk'))
-        delete_note_instance_from_elastic_search.delay(instance_id=instance.id)
         self.perform_destroy(instance=instance)
         deleted_note_send_notification(instance=instance.title,
                                       user_id=self.request.user.id)
@@ -198,3 +200,57 @@ class NoteSearchView(APIView):
                         "page": page,
                         "page_size": page_size,
                         "search_result": serializer.data})
+
+def download_pdf_file(request):
+    data_item_id = {}
+    serializer = PDFFileDownloadSerializer(data=request.data.get('data'))
+    if serializer.is_valid():
+        selected = serializer.validated_data.get("selected", "")
+        if selected == 'pdf-file':
+            pdf_result = download_pdf.delay({
+            "auth_user_id": request.user.id,
+            "user_access_token": request.COOKIES.get('access_token'),
+            "name": serializer.validated_data.get("name", ""),
+            "html_content": serializer.validated_data.get("html", "")})
+            data_item_id['pdf_download_task_id'] = pdf_result.id
+    return data_item_id
+
+
+class PDFDownloader(APIView):
+    http_method_names = ['post']
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request):
+        status_id = download_pdf_file(request=request)
+        return Response(status_id, status=status.HTTP_202_ACCEPTED)
+
+def get_status(task_id):
+    task = AsyncResult(task_id)
+    response_data = {
+        "FAILURE": {'status': 'FAILURE', 'error': str(task.result)},
+        "PENDING": {'status': 'PENDING'},
+        "SUCCESS": {'status': 'SUCCESS', 'pdf_url': task.result}                                            
+    }
+    return response_data.get(task.state, {'status': task.state})
+
+
+class PdfStatusView(APIView):
+    http_method_names = ['get']
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request, task_id):
+        response_data = get_status(task_id)
+        return Response(response_data)
+    
+
+class GetPDFFileView(APIView):
+    http_method_names = ['get']
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request, filename):
+        with contextlib.suppress(FileNotFoundError):
+            file_path = os.path.join(f"{settings.MEDIA_ROOT}pdf/", filename)
+            if os.path.exists(file_path):
+                response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                return response
+        
+        
+
