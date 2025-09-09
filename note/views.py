@@ -90,7 +90,7 @@ class NewNoteCreateView(CustomNoteCreateMixins, generics.CreateAPIView):
     def perform_create(self, serializer):
        instance = serializer.save(user=self.request.user)
        created_note_send_notification(
-       instance=instance, user_id=self.request.user.id
+       instance=instance, user_id=self.request.user.id # type: ignore
        )
 
 
@@ -106,7 +106,7 @@ class NotesListView(generics.ListAPIView):
     @rate_limiter(max_requests=int(max_tries_get_views), time_window=int(max_time_in_seconds))
     def list(self, request, *args, **kwargs):
         key = {"key_cache": f"user_notes_user_id_{request.user.id}_cache"}
-        cache_data = cache.get(key=key.get("key_cache"))
+        cache_data = cache.get(key=str(key.get("key_cache")))
         if cache_data is not None:
             return Response(cache_data)
         queryset = self.get_queryset()
@@ -220,7 +220,7 @@ def download_pdf_file(request):
     serializer = PDFFileDownloadSerializer(data=request.data.get('data'))
     if serializer.is_valid():
         pdf_result = download_pdf_delay_task(request, serializer)
-        data_item_id['pdf_download_task_id'] = pdf_result.id
+        data_item_id['pdf_download_task_id'] = pdf_result.id # type: ignore
     return data_item_id
 
 
