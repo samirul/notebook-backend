@@ -284,12 +284,13 @@ SESSION_CACHE_ALIAS = 'default'
 
 # Elastic search
 
+
 ELASTICSEARCH_DSL = {
     'default': {
         'hosts': os.environ.get('ELASTIC_SEARCH_URL'),
+        'ca_certs': os.environ.get('ELASTIC_SEARCH_CERTS'),
         'http_auth': (os.environ.get('ELASTIC_SEARCH_USER_NAME'), os.environ.get('ELASTIC_SEARCH_PASSWORD')),
         'verify_certs': os.environ.get('ELASTIC_SEARCH_VERIFY_CERTS'),
-
     },
 }
 
