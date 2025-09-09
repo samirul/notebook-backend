@@ -16,10 +16,10 @@ def execute_elastic_search_cmd(*args, **kwargs):
 
 def token_checker(token: str):
     try:
-        SIGNING_KEY = settings.SIMPLE_JWT.get('SIGNING_KEY')
-        if SIGNING_KEY is None:
+        signing_key = settings.SIMPLE_JWT.get('SIGNING_KEY')
+        if signing_key is None:
             raise ValueError("No signing key is found.")
-        data = jwt_decode(token, SIGNING_KEY, algorithms=["HS256"])
+        data = jwt_decode(token, signing_key, algorithms=["HS256"])
         return data['user_id']
     except (TypeError, ValueError, InvalidTokenError,
            InvalidSignatureError, ExpiredSignatureError, DecodeError) as e:
