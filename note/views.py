@@ -56,7 +56,7 @@ class CategoryListView(generics.ListAPIView):
     @rate_limiter(max_requests=int(max_tries_get_views), time_window=int(max_time_in_seconds))
     def list(self, request, *args, **kwargs):
         key = {"key_cache": f"user_category_user_id_{request.user.id}_cache"}
-        cache_data = cache.get(key=key.get("key_cache"))
+        cache_data = cache.get(key=str(key.get("key_cache")))
         if cache_data is not None:
             return Response(cache_data)
         queryset = self.get_queryset()
@@ -131,7 +131,7 @@ class NoteItemView(generics.RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
         key = {"key_cache": f"user_notes_id_{pk}_user_id_{request.user.id}_cache"}
-        cache_data = cache.get(key=key.get("key_cache"))
+        cache_data = cache.get(key=str(key.get("key_cache")))
         if cache_data is not None:
             return Response(cache_data)
         instance = self.get_object()
@@ -200,19 +200,27 @@ class NoteSearchView(APIView):
                         "page": page,
                         "page_size": page_size,
                         "search_result": serializer.data})
+    
+def download_pdf_delay_task(request, serializer):
+    selected = serializer.validated_data.get("selected", "")
+    if selected != 'pdf-file':
+        return Response({"error": "Pdf only required"}, status=status.HTTP_400_BAD_REQUEST)
+    payload = {
+        "auth_user_id": request.user.id,
+        "user_access_token": request.COOKIES.get('access_token'),
+        "name": serializer.validated_data.get("name", ""),
+        "html_content": serializer.validated_data.get("html", "")
+    }
+    return download_pdf.delay(payload) # type: ignore
+
+
 
 def download_pdf_file(request):
     data_item_id = {}
     serializer = PDFFileDownloadSerializer(data=request.data.get('data'))
     if serializer.is_valid():
-        selected = serializer.validated_data.get("selected", "")
-        if selected == 'pdf-file':
-            pdf_result = download_pdf.delay({
-            "auth_user_id": request.user.id,
-            "user_access_token": request.COOKIES.get('access_token'),
-            "name": serializer.validated_data.get("name", ""),
-            "html_content": serializer.validated_data.get("html", "")})
-            data_item_id['pdf_download_task_id'] = pdf_result.id
+        pdf_result = download_pdf_delay_task(request, serializer)
+        data_item_id['pdf_download_task_id'] = pdf_result.id
     return data_item_id
 
 
