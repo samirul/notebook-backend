@@ -7,6 +7,7 @@ from django.conf import settings
 from celery import shared_task
 from note.pdf_downloader.downloader import download_pdf as pdf
 from note.push_websocket import file_downloading_send_notification
+from custom_exceptions.exceptions import NoUserIsFoundException
 
 
 @shared_task(bind=True)
@@ -25,10 +26,6 @@ def token_checker(token: str):
            InvalidSignatureError, ExpiredSignatureError, DecodeError) as e:
         return e
     
-class NoUserIsFoundException(Exception):
-    pass
-
-
 def validate_user(data: dict):
     try:
         user_id = token_checker(str(data.get('user_access_token')))
