@@ -30,15 +30,21 @@ class NoUserIsFoundException(Exception):
 
 
 def validate_user(data: dict):
-    user_id = token_checker(data.get('user_access_token'))
-    if str(user_id) != str(data.get('auth_user_id')):
-        raise NoUserIsFoundException("No user was found or logged during PDF generation.")
-    return user_id
+    try:
+        user_id = token_checker(str(data.get('user_access_token')))
+        if str(user_id) != str(data.get('auth_user_id')):
+            raise NoUserIsFoundException("No user was found or logged during PDF generation.")
+        return user_id
+    except(ValueError, TypeError) as e:
+        return e
 
 def generate_pdf(data: dict, user_id: str):
-    name = data.get("name")
-    html_content = data.get("html_content")
-    return pdf(name, html_content, user_id)
+    try:
+        name = data.get("name")
+        html_content = data.get("html_content")
+        return pdf(str(name), str(html_content), user_id)
+    except(ValueError, TypeError) as e:
+        return e
 
 def notification_websocket_download(file_type: str, user_id: str):
      file_downloading_send_notification(
@@ -46,23 +52,28 @@ def notification_websocket_download(file_type: str, user_id: str):
      )
 
 def save_pdf(pdf_data: bytes, file_name: str):
-    os.makedirs(f"{settings.MEDIA_ROOT}pdf/", exist_ok=True)
-    file_path = os.path.join(f"{settings.MEDIA_ROOT}pdf/", file_name)
-    with open(file_path, "wb") as f:
-        f.write(pdf_data)
-    return file_path
+    try:
+        os.makedirs(f"{settings.MEDIA_ROOT}pdf/", exist_ok=True)
+        file_path = os.path.join(f"{settings.MEDIA_ROOT}pdf/", file_name)
+        with open(file_path, "wb") as f:
+            f.write(pdf_data)
+        return file_path
+    except OSError as e:
+        return e
 
 @shared_task(bind=True)
-def download_pdf(self, data):
+def download_pdf(self, data: dict):
     try:
         user_id = validate_user(data)
-        notification_websocket_download('PDF', user_id)
-        data, _, file_name = generate_pdf(data, user_id)
-        save_pdf(data, file_name)
+        notification_websocket_download('PDF', str(user_id))
+        pdf_result = generate_pdf(data, str(user_id))
+        if isinstance(pdf_result, (ValueError, TypeError)):
+            raise pdf_result
+        data_bytes, _, file_name = pdf_result
+        save_pdf(bytes(data_bytes), file_name)
         return f"{settings.MEDIA_ROOT}pdf/{file_name}"
     except (TypeError, ValueError) as e:
         raise self.retry(exc=e, countdown=10, max_retries=3)
-    except (InvalidTokenError, InvalidSignatureError,
-           ExpiredSignatureError, DecodeError, NoUserIsFoundException):
+    except (NoUserIsFoundException):
          return {'status': 'FAILURE', 'error': 'User is not found or not logged in.'}
 
