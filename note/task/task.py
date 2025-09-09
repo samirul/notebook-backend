@@ -1,3 +1,4 @@
+import logging
 from django.core.management import call_command
 from django.conf import settings
 from celery import shared_task
@@ -17,8 +18,8 @@ def download_pdf(self, data: dict):
         save_pdf(bytes(data_bytes), file_name)
         return f"{settings.MEDIA_ROOT}pdf/{file_name}"
     except (TypeError, ValueError) as e:
-        print(e)
+        logging.error(e)
     except (NoUserIsFoundException) as e:
-        print(e)
+        logging.error(e)
 
 
