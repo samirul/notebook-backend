@@ -9,6 +9,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rate_limiter.limiter import rate_limiter
+from custom_exceptions.exceptions import UndefinedException
 from .serializers import (NewCategorySerializer, CategoryListViewsSerializer, NewNoteSerializer,
                         CategorySerializerMenu, NoteItemViewSerializer, PDFFileDownloadSerializer)
 from .push_websocket import (created_category_note_send_notification, created_note_send_notification,
@@ -231,7 +232,9 @@ class PDFDownloader(APIView):
         status_id = download_pdf_file(request=request)
         return Response(status_id, status=status.HTTP_202_ACCEPTED)
 
-def get_status(task_id):
+def get_status(task_id: str):
+    if task_id == 'undefined':
+        raise UndefinedException("No task id is found.")
     task = AsyncResult(task_id)
     response_data = {
         "FAILURE": {'status': 'FAILURE', 'error': str(task.result)},
@@ -245,8 +248,11 @@ class PdfStatusView(APIView):
     http_method_names = ['get']
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request, task_id):
-        response_data = get_status(task_id)
-        return Response(response_data)
+        try:
+            response_data = get_status(task_id)
+            return Response(response_data)
+        except UndefinedException as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
 
 class GetPDFFileView(APIView):
