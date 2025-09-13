@@ -9,16 +9,17 @@ from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rate_limiter.limiter import rate_limiter
-from custom_exceptions.exceptions import UndefinedException
+from custom_exceptions.exceptions import UndefinedException, NoPDFException, NoTEXTException
 from .serializers import (NewCategorySerializer, CategoryListViewsSerializer, NewNoteSerializer,
-                        CategorySerializerMenu, NoteItemViewSerializer, PDFFileDownloadSerializer)
+                        CategorySerializerMenu, NoteItemViewSerializer, PDFFileDownloadSerializer,
+                        TXTFileDownloadSerializer)
 from .push_websocket import (created_category_note_send_notification, created_note_send_notification,
                              deleted_category_note_send_notification, deleted_note_send_notification,
                              update_note_send_notification)
 from .models import CategoryNotes, Notes
 from .custom_create import CustomCategoryCreateMixins, CustomNoteCreateMixins, clear_caches
 from .elastic.elastic_category import elastic_search_category, elastic_search_note
-from .task.task import download_pdf
+from .task.task import download_pdf, download_text
 
 
 file_dir = os.path.dirname(__file__)
@@ -205,7 +206,7 @@ class NoteSearchView(APIView):
 def download_pdf_delay_task(request, serializer):
     selected = serializer.validated_data.get("selected", "")
     if selected != 'pdf-file':
-        return Response({"error": "Pdf only required"}, status=status.HTTP_400_BAD_REQUEST)
+        raise NoPDFException("Pdf only required.")
     payload = {
         "auth_user_id": request.user.id,
         "user_access_token": request.COOKIES.get('access_token'),
@@ -229,8 +230,11 @@ class PDFDownloader(APIView):
     http_method_names = ['post']
     permission_classes = [permissions.IsAuthenticated]
     def post(self, request):
-        status_id = download_pdf_file(request=request)
-        return Response(status_id, status=status.HTTP_202_ACCEPTED)
+        try:
+            status_id = download_pdf_file(request=request)
+            return Response(status_id, status=status.HTTP_202_ACCEPTED)
+        except NoPDFException as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 def get_status(task_id: str):
     if task_id == 'undefined':
@@ -239,12 +243,12 @@ def get_status(task_id: str):
     response_data = {
         "FAILURE": {'status': 'FAILURE', 'error': str(task.result)},
         "PENDING": {'status': 'PENDING'},
-        "SUCCESS": {'status': 'SUCCESS', 'pdf_url': task.result}                                            
+        "SUCCESS": {'status': 'SUCCESS', 'url': task.result}                                            
     }
     return response_data.get(task.state, {'status': task.state})
 
 
-class PdfStatusView(APIView):
+class StatusView(APIView):
     http_method_names = ['get']
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request, task_id):
@@ -265,6 +269,52 @@ class GetPDFFileView(APIView):
                 response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
                 response['Content-Disposition'] = f'attachment; filename="{filename}"'
                 return response
+            
+def download_text_delay_task(request, serializer):
+    selected = serializer.validated_data.get("selected", "")
+    if selected != 'text-file':
+        raise NoPDFException("Text only required.")
+    payload = {
+        "auth_user_id": request.user.id,
+        "user_access_token": request.COOKIES.get('access_token'),
+        "name": serializer.validated_data.get("name", ""),
+        "html_content": serializer.validated_data.get("html", "")
+    }
+    return download_text.delay(payload) # type: ignore
+
+def download_text_file(request):
+    data_item_id = {}
+    serializer = TXTFileDownloadSerializer(data=request.data.get('data'))
+    if serializer.is_valid():
+        text_task_result = download_text_delay_task(request, serializer)
+        data_item_id['text_download_task_id'] = text_task_result.id # type: ignore
+    return data_item_id
+
+class DownloadTXT(APIView):
+    http_method_names = ['post']
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request):
+        try:
+            status_id = download_text_file(request=request)
+            return Response(status_id, status=status.HTTP_202_ACCEPTED)
+        except NoTEXTException as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class GetTextFileView(APIView):
+    http_method_names = ['get']
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request, filename):
+        with contextlib.suppress(FileNotFoundError):
+            file_path = os.path.join(f"{settings.MEDIA_ROOT}text/", filename)
+            if os.path.exists(file_path):
+                response = FileResponse(open(file_path, 'rb'), content_type='application/text')
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                return response
+
+
+
+
+
         
         
 

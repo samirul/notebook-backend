@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import (NewCategoryCreateView, CategoryListView, NewNoteCreateView,
                     NotesListView, NoteItemView, CategorySearchView, CategoryDestroyView, NoteSearchView,
-                    NoteUpdateView, NoteDestroyView, PDFDownloader, PdfStatusView, GetPDFFileView)
+                    NoteUpdateView, NoteDestroyView, PDFDownloader, StatusView, GetPDFFileView, DownloadTXT,
+                    GetTextFileView)
 
 urlpatterns = [
     # Category
@@ -16,8 +17,12 @@ urlpatterns = [
     path('note/search/', NoteSearchView.as_view(), name='note-search'),
     path('note/<str:pk>/update/', NoteUpdateView.as_view(), name='note-update'),
     path('note/delete/<str:pk>/', NoteDestroyView.as_view(), name='note-delete'),
-    #PDF Download
-    path('note/download/', PDFDownloader.as_view(), name='pdf-download'),
-    path('pdf-status/<str:task_id>/', PdfStatusView.as_view(), name='pdf-status'),
+    # celery status
+    path('status/<str:task_id>/', StatusView.as_view(), name='status'),
+    # PDF Download
+    path('note/download/pdf/', PDFDownloader.as_view(), name='pdf-download'),
     path('media/pdf/<str:filename>/', GetPDFFileView.as_view(), name='download-pdf'),
+    # TXT Download
+    path('note/download/text/', DownloadTXT.as_view(), name='txt-download'),
+    path('media/text/<str:filename>/', GetTextFileView.as_view(), name='download-text'),
 ]

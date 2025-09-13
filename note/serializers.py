@@ -61,7 +61,16 @@ class NoteSearchViewSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     title = serializers.CharField()
 
+
+class DownloadFileSerializer(serializers.Serializer):
+    name = serializers.CharField(required=True)
+    html = serializers.CharField(required=True)
+    selected = serializers.CharField(required=True)
+
 class PDFFileDownloadSerializer(serializers.Serializer):
     name = serializers.CharField(required=True)
     html = serializers.CharField(required=True)
     selected = serializers.CharField(required=True)
+
+class TXTFileDownloadSerializer(DownloadFileSerializer):
+    pass

@@ -176,5 +176,8 @@ cython_debug/
 # pdf ignore
 *.pdf
 
+# txt ignore
+*.txt
+
 # crt ignore
 crt/
