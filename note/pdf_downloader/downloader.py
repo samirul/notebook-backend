@@ -5,6 +5,10 @@ def download_pdf_html_strings(html_content: str):
         <!DOCTYPE html>
         <html lang="en">
         <head>
+            <style>
+                h1, h2, h3, h4, h5, h6, p, div, article, span 
+                {{ word-wrap: break-word; overflow-wrap: break-word; white-space: normal; }}
+            </style>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Document</title>
