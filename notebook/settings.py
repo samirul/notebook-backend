@@ -36,6 +36,7 @@ CREATED_APPS = [
     'accounts.apps.AccountsConfig',
     'BaseID.apps.BaseidConfig',
     'note.apps.NoteConfig',
+    'ocr.apps.OcrConfig',
 ]
 
 THIRD_PARTY_APPS = [
