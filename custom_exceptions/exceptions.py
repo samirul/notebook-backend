@@ -18,3 +18,8 @@ class NoTEXTException(APIException):
     default_detail = "Something went wrong."
     default_code = "undefined_error"
 
+
+class NotFoundRequiredTypeFileUploadException(APIException):
+    status_code = 400
+    default_detail = "Something went wrong."
+    default_code = "undefined_error"

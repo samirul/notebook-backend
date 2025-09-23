@@ -1,0 +1,1 @@
+from paddleocr import PPStructureV3

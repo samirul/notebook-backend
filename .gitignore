@@ -179,5 +179,10 @@ cython_debug/
 # txt ignore
 *.txt
 
+# images ignore
+*.png
+*.jpg
+*.jpeg
+
 # crt ignore
 crt/
