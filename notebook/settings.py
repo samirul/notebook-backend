@@ -36,7 +36,6 @@ CREATED_APPS = [
     'accounts.apps.AccountsConfig',
     'BaseID.apps.BaseidConfig',
     'note.apps.NoteConfig',
-    'ocr.apps.OcrConfig',
 ]
 
 THIRD_PARTY_APPS = [
@@ -270,8 +269,11 @@ AUTHENTICATION_BACKENDS = (
 STATIC_URL = "/static/"
 MEDIA_URL = '/media/'
 
-STATIC_ROOT = "/static/"
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+# STATIC_ROOT = "/static/"
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
+STATIC_ROOT = "/run/media/sag/Linux/Projects/notebook-backend/vol/static/"
+MEDIA_ROOT = "/run/media/sag/Linux/Projects/notebook-backend/vol/media/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
