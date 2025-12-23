@@ -255,7 +255,7 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = False
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 
 
-LOGIN_URL = 'http://localhost:8080/login'
+LOGIN_URL = 'http://localhost:8000/api/accounts/auth/login/'
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",

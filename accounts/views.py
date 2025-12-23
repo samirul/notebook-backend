@@ -11,6 +11,32 @@ from rest_framework import status
 from rest_framework.response import Response
 from accounts.serializers import GetUserSerializer, CheckLoggedUserStatusSerializer
 
+class CustomGoogleOAuth2Client(OAuth2Client):
+    def __init__(
+        self,
+        request,
+        consumer_key,
+        consumer_secret,
+        access_token_method,
+        access_token_url,
+        callback_url,
+        _scope,  # This is fix for incompatibility between django-allauth==65.2.0 and dj-rest-auth==7.0.1
+        scope_delimiter=" ",
+        headers=None,
+        basic_auth=False,
+    ):
+        super().__init__(
+            request,
+            consumer_key,
+            consumer_secret,
+            access_token_method,
+            access_token_url,
+            callback_url,
+            scope_delimiter,
+            headers,
+            basic_auth,
+        )
+
 
 class GoogleLoginViews(SocialLoginView):
     """Added Google Login Views for login with google with dj_rest_auth and all auth.
@@ -21,8 +47,8 @@ class GoogleLoginViews(SocialLoginView):
         After that will have access token and refresh token.
     """
     adapter_class = GoogleOAuth2Adapter
-    callback_url = "http://localhost:8080"
-    client_class = OAuth2Client
+    callback_url = "http://localhost:5173"
+    client_class = CustomGoogleOAuth2Client
 
 class CheckLoggedUserStatus(APIView):
     def get(self, request):
