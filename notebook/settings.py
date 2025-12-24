@@ -124,6 +124,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "allauth.account.middleware.AccountMiddleware",
+    "middlewares.middleware_move_refresh_token.MoveJWTRefreshCookieIntoTheBody",
 ]
 
 ROOT_URLCONF = 'notebook.urls'
